@@ -73,27 +73,6 @@ docker-compose exec backend npx prisma migrate deploy
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:3001
 
-## Development
-
-### Start all services
-```bash
-docker-compose up
-```
-
-### Start in background
-```bash
-docker-compose up -d
-```
-
-### Stop all services
-```bash
-docker-compose down
-```
-
-### View logs
-```bash
-docker-compose logs
-```
 
 ## Project Structure
 
@@ -132,51 +111,7 @@ Kanban-project-main/
 - **3001**: Backend API
 - **5432**: PostgreSQL Database
 
-## Troubleshooting
 
-### Common Issues
-
-1. **Port already in use**
-   ```bash
-   # Check what's using the port
-   netstat -tulpn | grep :3000
-   
-   # Kill the process
-   sudo kill -9 <PID>
-   ```
-
-2. **Database connection failed**
-   ```bash
-   # Check if postgres is running
-   docker-compose ps
-   
-   # Restart postgres
-   docker-compose restart postgres
-   ```
-
-3. **Build failed**
-   ```bash
-   # Clean build
-   docker-compose down
-   docker system prune -f
-   docker-compose up --build
-   ```
-
-## Production Deployment
-
-### 1. Update environment variables
-```bash
-# Edit .env file
-# Change JWT_SECRET to a strong secret
-# Update FRONTEND_URL to your domain
-```
-
-### 2. Deploy
-```bash
-docker-compose up -d
-```
-
-## Success!
 
 Your Kanban Board should now be running at http://localhost:3000!
 
