@@ -1,0 +1,52 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: kanban-postgres
+    environment:
+      POSTGRES_DB: kanban_db
+      POSTGRES_USER: kanban_user
+      POSTGRES_PASSWORD: kanban_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - kanban-network
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: kanban-backend
+    environment:
+      DATABASE_URL: postgresql://kanban_user:kanban_password@postgres:5432/kanban_db
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      FRONTEND_URL: http://localhost:3000
+      NODE_ENV: production
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    networks:
+      - kanban-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: kanban-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - kanban-network
+
+volumes:
+  postgres_data:
+
+networks:
+  kanban-network:
+    driver: bridge

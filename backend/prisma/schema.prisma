@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedBoards Board[] @relation("BoardOwner")
+  boardMembers BoardMember[]
+  taskMembers  TaskMember[]
+  createdTasks Task[] @relation("TaskCreator")
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// Board Model
+model Board {
+  id        Int      @id @default(autoincrement())
+  name      String
+  ownerId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner     User         @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  columns   Column[]
+  members   BoardMember[]
+  tags      Tag[]
+
+  @@map("boards")
+}
+
+// Column Model
+model Column {
+  id        Int      @id @default(autoincrement())
+  name      String
+  position  Int      @default(1)
+  boardId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@map("columns")
+}
+
+// Task Model
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  position    Int
+  columnId    Int
+  createdBy   Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  column   Column        @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  creator  User?         @relation("TaskCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  members  TaskMember[]
+  taskTags TaskTag[]
+
+  @@map("tasks")
+}
+
+// Board Member Model (Many-to-Many between User and Board)
+model BoardMember {
+  id      Int @id @default(autoincrement())
+  userId  Int
+  boardId Int
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, boardId])
+  @@map("board_members")
+}
+
+// Task Member Model (Many-to-Many between User and Task)
+model TaskMember {
+  id     Int    @id @default(autoincrement())
+  userId Int
+  taskId Int
+  status String @default("ACCEPTED") // PENDING, ACCEPTED, REJECTED
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+  @@map("task_members")
+}
+
+// Tag Model
+model Tag {
+  id        Int      @id @default(autoincrement())
+  name      String
+  color     String   @default("#3B82F6")
+  boardId   Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  board    Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  taskTags TaskTag[]
+
+  @@unique([name, boardId])
+  @@map("tags")
+}
+
+// Task Tag Model (Many-to-Many between Task and Tag)
+model TaskTag {
+  id     Int @id @default(autoincrement())
+  taskId Int
+  tagId  Int
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, tagId])
+  @@map("task_tags")
+}
+
+// Notification Model
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String   @default("GENERAL") // TASK_ASSIGNMENT, TASK_ASSIGNMENT_ACCEPTED, etc.
+  title     String
+  message   String
+  data      Json?    // Additional data for the notification
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
