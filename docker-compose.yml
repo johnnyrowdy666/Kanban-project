@@ -1,5 +1,6 @@
+version: "3.9"
 services:
-  # PostgreSQL Database
+  # PostgreSQL
   postgres:
     image: postgres:15-alpine
     container_name: kanban-postgres
@@ -29,9 +30,7 @@ services:
       - postgres
     networks:
       - kanban-network
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+
 
   # Frontend
   frontend:

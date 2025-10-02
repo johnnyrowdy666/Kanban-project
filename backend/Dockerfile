@@ -1,25 +1,17 @@
-# Use Node.js 18 Alpine image
-FROM node:18-alpine
-
+FROM node:18-alpine AS builder
 WORKDIR /app
-
-# Copy package files
+RUN apk add --no-cache python3 make g++
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
-
-# Copy source code
 COPY . .
-
-# Build the TypeScript code
 RUN npm run build
-
-# Generate Prisma client
 RUN npx prisma generate
 
-# Expose port
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY package.json .
 EXPOSE 3001
-
-# Start the application
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/server.js"]
